@@ -1,0 +1,85 @@
+52d51
+<   public :: calc_energy_terms      ! compute static / dynamic energy to verify conservation --> HP added. 
+172,174d170
+<     call addfld('ATENDKE ', 'W/m2', 1,    'A', 'Diff in kinetic energy before and after physics_dme_adjust',   phys_decomp)
+<     call addfld('ATENDSE ', 'W/m2', 1,    'A', 'Diff in static energy before and after physics_dme_adjust',   phys_decomp)
+< 
+716,793d711
+< !===============================================================================
+<   subroutine calc_energy_terms(state, ke, se, wv, wl, wi)
+< 
+<     use physconst, only: rga, cpair
+< 
+< !-----------------------------------------------------------------------
+< ! Below hparish is porting BEH's implementation to check for energy conservation.
+< ! A few lines at the end of the subroutine are corrected (see Bryce's implementation in email dated Oct. 18, 2018) to account for separate computation of ice and liquid species.
+< ! Fow now, all is using cpair. The more rigorous way is to use cpair in combination with cpairv depending on the local conditions.
+< !-----------------------------------------------------------------------
+< 
+<     type(physics_state), intent(in   ) :: state
+< 
+<     real(r8), intent(out  ) :: se(pcols)      ! Dry Static energy (J/m2)
+<     real(r8), intent(out  ) :: ke(pcols)      ! kinetic energy    (J/m2)
+<     real(r8), intent(out  ) :: wv(pcols)      ! column integrated vapor       (kg/m2)
+<     real(r8), intent(out  ) :: wl(pcols)      ! column integrated liquid      (kg/m2)
+<     real(r8), intent(out  ) :: wi(pcols)      ! column integrated ice         (kg/m2)
+< 
+<     integer ncol                              ! number of atmospheric columns
+<     integer  i,k                              ! column, level indices
+<     integer :: ixcldice, ixcldliq             ! CLDICE and CLDLIQ indices
+<     integer :: ixrain, ixsnow                 ! RAIN and SNOW indices
+< 
+<     ncol  = state%ncol
+<     call cnst_get_ind('CLDICE', ixcldice, abort=.false.)
+<     call cnst_get_ind('CLDLIQ', ixcldliq, abort=.false.)
+<     call cnst_get_ind('RAINQM', ixrain,   abort=.false.)
+<     call cnst_get_ind('SNOWQM', ixsnow,   abort=.false.)
+< 
+<     !Energy is divided into 3 parts: KE, SE, and thermal associated with vapor and liquid latent heat
+< 
+<     !Initiate all with zero.
+<     se     = 0._r8
+<     ke     = 0._r8
+<     wv     = 0._r8
+<     wl     = 0._r8
+<     wi     = 0._r8
+< 
+<     !Integrate static and kinetic energies in the column.
+<     do k = 1,pver
+<        do i = 1,ncol
+<           se(i) = se(i) +    cpair*state%t(i,k)                        * state%pdel(i,k)*rga
+<           ke(i) = ke(i) + (0.5_r8*(state%u(i,k)**2 + state%v(i,k)**2)) * state%pdel(i,k)*rga
+<           wv(i) = wv(i) +          state%q(i,k,1)                      * state%pdel(i,k)*rga
+<        end do
+<     end do
+< 
+<     do i = 1,ncol
+<        se(i) = se(i) + state%phis(i)*state%ps(i)*rga
+<     end do
+< 
+<     !Integrate water species in the column. 
+<     do k = 1,pver
+<       do i = 1,ncol
+<        if (ixcldliq > 1) then
+<          wl(i) = wl(i) + state%q(i,k,ixcldliq) * state%pdel(i,k)*rga
+<        end if
+<        if (ixcldice > 1) then
+<          wi(i) = wi(i) + state%q(i,k,ixcldice) * state%pdel(i,k)*rga
+<        end if
+<       end do
+<     end do
+< 
+<    do k = 1,pver
+<      do i = 1,ncol
+<       if (ixrain > 1) then
+<         wl(i) = wl(i) + state%q(i,k,ixrain) * state%pdel(i,k)*rga
+<       end if
+<       if (ixsnow > 1) then
+<         wi(i) = wi(i) + state%q(i,k,ixsnow) * state%pdel(i,k)*rga
+<       end if
+<      end do
+<    end do
+< 
+<    return
+< 
+<   end subroutine calc_energy_terms

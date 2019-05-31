@@ -1,0 +1,39 @@
+9c9
+<   use geopotential, only: geopotential_dse, geopotential_t
+---
+>   use geopotential, only: geopotential_dse
+21c21
+<   logical, parameter :: adjust_te = .TRUE.
+---
+>   logical, parameter :: adjust_te = .FALSE.
+770d769
+< 
+793,794c792
+<           !te(:ncol) = state%s(:ncol,k) + 0.5_r8*(state%u(:ncol,k)**2 + state%v(:ncol,k)**2)      ! This implementation does not conserve energy. 
+<           te(:ncol) = cpairv(:ncol,k,lchnk)*state%t(:ncol,k) + 0.5_r8*(state%u(:ncol,k)**2 + state%v(:ncol,k)**2)  ! HP is following Williamson 2015 correction. 
+---
+>           te(:ncol) = state%s(:ncol,k) + 0.5_r8*(state%u(:ncol,k)**2 + state%v(:ncol,k)**2) 
+808,809c806
+<           !state%s(:ncol,k) = te(:ncol) - 0.5_r8*(state%u(:ncol,k)**2 + state%v(:ncol,k)**2)
+<           state%t(:ncol,k) = (te(:ncol) - 0.5_r8*(state%u(:ncol,k)**2 + state%v(:ncol,k)**2)) / cpairv(:ncol,k,lchnk)  ! HP is following Williamson 2015 correction.
+---
+>           state%s(:ncol,k) = te(:ncol) - 0.5_r8*(state%u(:ncol,k)**2 + state%v(:ncol,k)**2)
+827,838c824,828
+< 
+< ! HP: After Williamson 2015 correction, the geopotential should be computed using state%t rather than state%s.
+<        call geopotential_t(state%lnpint, state%lnpmid, state%pint,  &
+<             state%pmid  ,  state%pdel    , state%rpdel,  &
+<             state%t     ,  state%q(:,:,1), rairv(:,:,state%lchnk), &
+<             gravit, zvirv, state%zi      , state%zm   , ncol)
+< 
+< !       call geopotential_dse(state%lnpint, state%lnpmid  , state%pint ,  &
+< !            state%pmid  , state%pdel    , state%rpdel,  &
+< !            state%s     , state%q(1,1,1), state%phis , rairv(:,:,state%lchnk), &
+< !	    gravit, cpairv(:,:,state%lchnk), zvirv, &
+< !            state%t     , state%zi      , state%zm   , ncol)
+---
+>        call geopotential_dse(state%lnpint, state%lnpmid  , state%pint ,  &
+>             state%pmid  , state%pdel    , state%rpdel,  &
+>             state%s     , state%q(1,1,1), state%phis , rairv(:,:,state%lchnk), &
+> 	    gravit, cpairv(:,:,state%lchnk), zvirv, &
+>             state%t     , state%zi      , state%zm   , ncol)

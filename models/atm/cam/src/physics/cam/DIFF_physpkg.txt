@@ -1,0 +1,32 @@
+1243c1243
+<     use check_energy,       only: check_energy_chng, calc_energy_terms
+---
+>     use check_energy,       only: check_energy_chng
+1261d1260
+<     use cam_history,        only: outfld
+1308,1312d1306
+<     real(r8) :: ke_tmp1(pcols), se_tmp1(pcols), wv_tmp1(pcols), wl_tmp1(pcols), wi_tmp1(pcols)    !HP added to check energy balance
+<     real(r8) :: ke_tmp2(pcols), se_tmp2(pcols), wv_tmp2(pcols), wl_tmp2(pcols), wi_tmp2(pcols)    !HP added to check energy balance
+<     real(r8) :: CIDiff(pcols)                                                                     !HP added to check energy balance
+<     real(r8) :: rtdt                              ! 1./ztodt
+< 
+1331,1332d1324
+<     rtdt = 1._r8/ztodt
+< 
+1580,1591c1572
+< 
+<     call physics_update(state, tend, ptend, ztodt)                                 !HP added this line. Physics has to be updated first.
+<     call calc_energy_terms(state, ke_tmp1, se_tmp1, wv_tmp1, wl_tmp1, wi_tmp1)     !HP added this line, energy and water species before adjustment
+< 
+<     call physics_dme_adjust(state, tend, qini, ztodt)                              !HP: Adjust dme. NO NEED to call physics_update after this.
+< 
+<     call calc_energy_terms(state, ke_tmp2, se_tmp2, wv_tmp2, wl_tmp2, wi_tmp2)     !HP added this line, energy and water species after adjustment
+<     CIDiff(:ncol) = ( ke_tmp2(:ncol) - ke_tmp1(:ncol) ) * rtdt                     !HP added this line, now compute and output the before and after diffs
+<     call outfld('ATENDKE', CIDiff, pcols, lchnk )
+<     CIDiff(:ncol) = ( se_tmp2(:ncol) - se_tmp1(:ncol) ) * rtdt
+<     call outfld('ATENDSE', CIDiff, pcols, lchnk )
+< 
+---
+>     call physics_dme_adjust(state, tend, qini, ztodt)
+1613a1595
+> 
